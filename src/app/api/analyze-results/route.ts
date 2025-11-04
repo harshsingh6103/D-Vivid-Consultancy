@@ -120,6 +120,18 @@
     
     Consider countries: Canada, Australia, UK, Germany, USA, Singapore, Ireland, Netherlands, UAE.
     
+    IMPORTANT FOR COUNTRY REASONING:
+    - Format the "reasoning" field as 3-5 concise, single-line bullet points
+    - Each bullet should be ONE sentence only (max 80-100 characters per bullet)
+    - Each bullet should cite specific dimensions and scores (e.g., "High financial readiness (75%) matches moderate costs")
+    - Use simple, clear sentences separated by periods
+    - Do NOT write as a single paragraph - write as separate, short sentences that will be converted to bullets
+    - Keep each point focused, scannable, and concise
+    - Examples:
+      * "Moderate tuition costs align with student's financial readiness (65%)"
+      * "Strong Indian community supports cultural integration"
+      * "Straightforward visa process matches practical readiness score"
+    
     IMPORTANT: Ensure recommendations align with student's actual readiness level. Don't recommend highly competitive options if CRI is low.
     
     You must provide:
@@ -218,7 +230,7 @@
     4. COUNTRY-FIT ANALYSIS:
     For top 3 countries, provide:
     - Match percentage (0-100%)
-    - Specific reasons why this country fits the student's profile
+    - Reasoning: Provide 3-5 concise, single-line bullet points (ONE sentence each, max 80-100 chars). Each bullet should cite specific dimensions and scores. Format as simple sentences separated by periods, NOT as a paragraph.
     - Potential challenges for this student in that country
     - Specific universities or programs to consider
     
@@ -249,9 +261,9 @@
       "Gaps": "<detailed paragraph citing specific weaknesses and risks>",
       "Recommendations": "<3-5 specific, actionable recommendations with timeline>",
       "Country Fit (Top 3)": [
-        {"country": "<name>", "match": <number 0-100>, "reasoning": "<detailed explanation citing which dimensions align>", "challenges": "<specific challenges based on weak dimensions>", "universities": "<realistic university names>"},
-        {"country": "<name>", "match": <number 0-100>, "reasoning": "<detailed explanation citing which dimensions align>", "challenges": "<specific challenges based on weak dimensions>", "universities": "<realistic university names>"},
-        {"country": "<name>", "match": <number 0-100>, "reasoning": "<detailed explanation citing which dimensions align>", "challenges": "<specific challenges based on weak dimensions>", "universities": "<realistic university names>"}
+        {"country": "<name>", "match": <number 0-100>, "reasoning": "<3-5 concise single-line bullets (ONE sentence each, max 80-100 chars per bullet) explaining why this country fits, citing specific dimensions and scores>", "challenges": "<specific challenges based on weak dimensions>", "universities": "<realistic university names>"},
+        {"country": "<name>", "match": <number 0-100>, "reasoning": "<3-5 concise single-line bullets (ONE sentence each, max 80-100 chars per bullet) explaining why this country fits, citing specific dimensions and scores>", "challenges": "<specific challenges based on weak dimensions>", "universities": "<realistic university names>"},
+        {"country": "<name>", "match": <number 0-100>, "reasoning": "<3-5 concise single-line bullets (ONE sentence each, max 80-100 chars per bullet) explaining why this country fits, citing specific dimensions and scores>", "challenges": "<specific challenges based on weak dimensions>", "universities": "<realistic university names>"}
       ]
     }`
 
