@@ -529,8 +529,15 @@ export default function ExpandedSurvey() {
   const calculateScores = (responses: Response[]) => {
     const sectionScores: { [key: string]: { correct: number; total: number } } = {};
     
-    // Initialize section scores
-    const sections = ['Academic Readiness', 'Cultural Adaptability', 'Career Clarity', 'Study Abroad Readiness', 'Support System'];
+    // Initialize section scores - MUST match the section names from questions
+    const sections = [
+      'Academic Readiness',
+      'Career & Goal Alignment', 
+      'Financial Planning',
+      'Personal & Cultural Readiness',
+      'Practical Readiness',
+      'Support System'
+    ];
     sections.forEach(section => {
       sectionScores[section] = { correct: 0, total: 0 };
     });
@@ -597,7 +604,20 @@ export default function ExpandedSurvey() {
         
         try {
           const studentData = calculateScores(updatedResponses);
+          
+          // Create comprehensive data object with both scores and raw responses
+          const comprehensiveData = {
+            ...studentData,
+            rawResponses: updatedResponses, // Include individual question-answer pairs
+            questions: expandedQuestions // Include the actual questions
+          };
+          
           console.log('🔄 Calling LLM analysis for Expanded Survey...');
+          console.log('📊 Data being sent to LLM:', JSON.stringify(comprehensiveData, null, 2));
+          
+          // Save to localStorage for inspection
+          localStorage.setItem('lastLLMPayload', JSON.stringify(comprehensiveData));
+          console.log('💾 Data saved to localStorage as "lastLLMPayload"');
           
           const response = await fetch('/api/analyze-results', {
             method: 'POST',

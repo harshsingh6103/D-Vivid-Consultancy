@@ -1,341 +1,371 @@
-import { NextRequest, NextResponse } from 'next/server'
-import OpenAI from 'openai'
+    import { NextRequest, NextResponse } from 'next/server'
+    import OpenAI from 'openai'
 
-interface StudentData {
-  userName: string
-  userEmail?: string
-  userPhone?: string
-  overallScore: number
-  topicScoresArray: Array<{
-    name: string
-    correct: number
-    total: number
-  }>
-}
-
-interface LLMResponse {
-  studentName: string
-  studentEmail: string
-  studentClass: string
-  studentSchool: string
-  score: number
-  maxScore: number
-  totalTime: number
-  topics: Array<{
-    name: string
-    correct: number
-    total: number
-  }>
-  careerInterests: Array<{
-    name: string
-    score: number
-  }>
-  aptitudeScores: Array<{
-    name: string
-    score: number
-  }>
-  skills: Array<{
-    name: string
-    score: number
-  }>
-  academicRecommendations: string[]
-  examRecommendations: string[]
-  upskillingRecommendations: string[]
-  extracurricularRecommendations: string[]
-  analysis: {
-    readinessBand: string
-    overallAssessment: string
-    strengths: string[]
-    weaknesses: string[]
-    specificRecommendations: string[]
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    console.log('🔍 Analyze-results API called');
-    const studentData: StudentData = await request.json()
-    console.log('📥 Received student data:', JSON.stringify(studentData, null, 2));
-    
-    // Validate required fields
-    if (!studentData.userName) {
-      console.error('❌ Missing userName in student data')
-      return NextResponse.json({ error: 'Missing user name' }, { status: 400 })
+    interface StudentData {
+      userName: string
+      userEmail?: string
+      userPhone?: string
+      overallScore: number
+      topicScoresArray: Array<{
+        name: string
+        correct: number
+        weighted: number
+        weight: number
+        total: number
+      }>
     }
+
+    // Removed LLMResponse interface - we now return data in the format expected by generate-pdf
+    // The LLM is instructed to return JSON with fields matching the PDF generation requirements:
+    // - "Student Name", "Student Email", "Student Phone"
+    // - "Scores" object with framework names as keys
+    // - "Overall Readiness Index", "Readiness Level"
+    // - "Strengths", "Gaps", "Recommendations" (strings or arrays)
+    // - "Country Fit (Top 3)" array
+
+    export async function POST(request: NextRequest) {
+      try {
+        console.log('🔍 Analyze-results API called');
+        const studentData: StudentData = await request.json()
+        console.log('📥 Received student data:', JSON.stringify(studentData, null, 2));
+        
+        // Validate required fields
+        if (!studentData.userName) {
+          console.error('❌ Missing userName in student data')
+          return NextResponse.json({ error: 'Missing user name' }, { status: 400 })
+        }
+        
+        // Check if API key is available
+        const apiKey = process.env.PERPLEXITY_API_KEY;
+        if (!apiKey) {
+          console.error('❌ PERPLEXITY_API_KEY not found in environment variables');
+          throw new Error('PERPLEXITY_API_KEY not configured');
+        }
+        console.log('✅ PERPLEXITY_API_KEY found:', apiKey.substring(0, 10) + '...');
+        console.log('🔑 Full API key length:', apiKey.length);
+        
+        // Prepare the prompts - Enhanced with comprehensive evaluation philosophy
+          const systemPrompt = `You are an expert psychometric evaluator specializing in study-abroad readiness assessment for Indian students.
     
-    // Check if API key is available
-    const apiKey = process.env.PERPLEXITY_API_KEY;
-    if (!apiKey) {
-      console.error('❌ PERPLEXITY_API_KEY not found in environment variables');
-      throw new Error('PERPLEXITY_API_KEY not configured');
-    }
-    console.log('✅ PERPLEXITY_API_KEY found:', apiKey.substring(0, 10) + '...');
-    console.log('🔑 Full API key length:', apiKey.length);
+    You analyze psychometric test responses using the Comprehensive Study Abroad Assessment Framework, which uses a weighted multi-factor scoring model.
     
-    // Prepare the prompts
-      const systemPrompt = `You are an expert psychometric evaluator for Indian study-abroad aspirants. 
-You analyze aptitude and personality test responses and map them to the 
-Comprehensive Study Abroad Assessment Framework (Academic Readiness, Financial Planning, 
-Career Alignment, Personal & Cultural Readiness, Practical Readiness, Support System).
-
-You must:
-• Interpret quiz/test responses from numerical, verbal, mechanical, and concentration tests as indicators of cognitive skills.  
-• Interpret personality items (Big Five model) as indicators of emotional, cultural, and social readiness.
-• Calculate sub-scores for each dimension (0–100 scale) and provide readiness levels using the scoring guide:  
-  - 90–100: Excellent  
-  - 80–89: Very Good  
-  - 70–79: Good  
-  - 60–69: Satisfactory  
-  - <60: Needs Improvement  
-
-• Then synthesize a narrative summary of strengths, gaps, and recommendations for improvement.
-• Align all results with the 6-factor framework weights:
-  - Financial Planning 25%
-  - Academic Readiness 20%
-  - Career & Goal Alignment 20%
-  - Personal & Cultural Readiness 15%
-  - Practical Readiness 10%
-  - Support System 10%
-
-Output Format (JSON + Summary):
-{
-  "Student Name": "...",
-  "Student Email": "...",
-  "Student Phone": "...",
-  "Scores": {
-     "Financial Planning": "...",
-     "Academic Readiness": "...",
-     "Career Alignment": "...",
-     "Personal & Cultural": "...",
-     "Practical Readiness": "...",
-     "Support System": "..."
-  },
-  "Overall Readiness Index": "...",
-  "Readiness Level": "...",
-  "Strengths": "...",
-  "Gaps": "...",
-  "Recommendations": "...",
-  "Country Fit (Top 3)": [...]
-}
-
-Be objective, research-based, and India-context aware. ONLY output JSON.`
-
-      const userPrompt = `Evaluate the following student's quiz performance and psychometric profile.
-
-Student Details:
-Name: ${studentData.userName}
-Email: ${studentData.userEmail || 'Not provided'}
-Contact: ${studentData.userPhone || 'Not provided'}
-
-Test Results Summary:
-${studentData.topicScoresArray.map(topic => {
-  const score = Math.round((topic.correct/topic.total)*25);
-  return `${topic.name}: ${score} / 25`;
-}).join('\n')}
-
-Overall Performance: ${studentData.overallScore}/100
-
-IMPORTANT EVALUATION GUIDELINES:
-- Interpret these scores as indicators of readiness across the 6-factor framework
-- Map quiz performance to the comprehensive study abroad assessment framework
-- Consider that quiz responses reflect cognitive abilities, personality traits, and preparedness
-- Use the scoring guide: 90-100 (Excellent), 80-89 (Very Good), 70-79 (Good), 60-69 (Satisfactory), <60 (Needs Improvement)
-- Provide realistic, research-based analysis suitable for Indian study-abroad aspirants
-
-Please:
-1. Generate the **CRI (Comprehensive Readiness Index)** based on the 6-factor framework mapping
-2. Provide sub-scores for each of the 6 framework areas (Financial Planning, Academic Readiness, Career Alignment, Personal & Cultural, Practical Readiness, Support System)
-3. Include qualitative strengths, development areas, and clear next steps
-4. Suggest top 3 study destinations using the Country-Fit Matrix logic from the framework
-
-Use the 6-factor framework weights:
-- Financial Planning 25%
-- Academic Readiness 20%
-- Career & Goal Alignment 20%
-- Personal & Cultural Readiness 15%
-- Practical Readiness 10%
-- Support System 10%`
-
-    // Try Perplexity API with fallback to mock data
-    let generatedText = '';
-    let modelUsed = 'fallback';
+    EVALUATION PHILOSOPHY:
+    Every multiple-choice answer maps to latent constructs:
+    - Financial planning ability, budgeting confidence, risk management, cost awareness
+    - Academic readiness: GPA consistency, test prep, language skills
+    - Career clarity: goal alignment, program relevance, decision maturity
+    - Personal & cultural readiness: adaptability, independence, social integration
+    - Practical readiness: visa/document prep, tech skills, safety planning
+    - Support system: family consensus, emotional resilience, backup plans
     
-    try {
-      console.log('🌐 Attempting Perplexity API call...');
-      const openai = new OpenAI({
-        apiKey: apiKey,
-        baseURL: "https://api.perplexity.ai",
-        timeout: 60000, // 60 second timeout
-        maxRetries: 2,
-      });
+    SCORING METHODOLOGY:
+    Each response uses a 5-point scale:
+    - Response A (Strongly Agree/Very Confident) = 5 (Excellent readiness)
+    - Response B (Agree/Confident) = 4 (Above average readiness)
+    - Response C (Neutral/Unsure) = 3 (Moderate readiness)
+    - Response D (Disagree/Weak) = 2 (Below readiness threshold)
+    - Response E (Strongly Disagree/Not Ready) = 1 (Significant gap)
+    
+    Each dimension contributes to one of six readiness dimensions with specific weights:
+    1. Financial Planning - 25% weight (Budgeting, funding confidence, risk management, cost awareness)
+    2. Academic Readiness - 20% weight (GPA consistency, test prep, language skills)
+    3. Career & Goal Alignment - 20% weight (Career clarity, program relevance, decision maturity)
+    4. Personal & Cultural Readiness - 15% weight (Adaptability, independence, social integration)
+    5. Practical Readiness - 10% weight (Visa/document prep, tech skills, safety planning)
+    6. Support System - 10% weight (Family consensus, emotional resilience, backup plan)
+    
+    COMPREHENSIVE READINESS INDEX (CRI) CALCULATION:
+    CRI = Σ(Score_i × Weight_i) for all 6 dimensions
+    The CRI ranges from 0-100, providing an overall readiness assessment.
+    
+    READINESS LEVELS:
+    90-100: Excellent (Ready to apply immediately, 0-3 months prep)
+    80-89: Very Good (Minor preparation needed, 3-6 months prep)
+    70-79: Good (Prepare before next cycle, 6-9 months prep)
+    60-69: Satisfactory (Strengthen weak areas, 9-12 months prep)
+    50-59: Needs Improvement (Major readiness gaps, 12-18 months prep)
+    <50: Low Readiness (Reassess plan/delay, >18 months prep)
+    
+    COUNTRY-FIT MATRIX LOGIC:
+    
+    ALGORITHM FOR COUNTRY RECOMMENDATIONS:
+    
+    For each country, calculate match score based on dimension scores:
+    
+    1. Financial Planning score:
+       - < 60: Favor Germany, Canada, Ireland, UAE (lower costs)
+       - >= 60: Any country acceptable
+    
+    2. Academic Readiness score:
+       - < 70: Suggest mid-tier universities in any country
+       - >= 70: Competitive universities accessible
+    
+    3. Personal & Cultural Readiness score:
+       - < 60: Favor UK, Australia, USA, Canada (large Indian communities)
+       - >= 60: Any country suitable
+    
+    4. Practical Readiness score:
+       - < 60: Avoid USA (complex visa), prefer straightforward processes
+       - >= 60: Any country manageable
+    
+    5. Support System score:
+       - < 60: Prioritize countries with strong student support services
+       - >= 60: Any country
+    
+    Calculate match percentage as weighted average (0-100):
+    - Strong dimension alignment = +20 points
+    - Moderate alignment = +10 points
+    - Weak alignment = -10 points
+    - Critical mismatches = -20 points
+    
+    Consider countries: Canada, Australia, UK, Germany, USA, Singapore, Ireland, Netherlands, UAE.
+    
+    IMPORTANT FOR COUNTRY REASONING:
+    - Format the "reasoning" field as 3-5 concise, single-line bullet points
+    - Each bullet should be ONE sentence only (max 80-100 characters per bullet)
+    - Each bullet should cite specific dimensions and scores (e.g., "High financial readiness (75%) matches moderate costs")
+    - Use simple, clear sentences separated by periods
+    - Do NOT write as a single paragraph - write as separate, short sentences that will be converted to bullets
+    - Keep each point focused, scannable, and concise
+    - Examples:
+      * "Moderate tuition costs align with student's financial readiness (65%)"
+      * "Strong Indian community supports cultural integration"
+      * "Straightforward visa process matches practical readiness score"
+    
+    IMPORTANT: Ensure recommendations align with student's actual readiness level. Don't recommend highly competitive options if CRI is low.
+    
+    You must provide:
+    1. Detailed analysis of each dimension's specific constructs
+    2. Concrete, actionable recommendations tailored to Indian study-abroad context
+    3. Country-specific fit assessment based on student's profile
+    4. Timeline-based preparation roadmap
+    
+    Output ONLY valid JSON in the specified format. Be specific, data-driven, and practical.`
 
-      // Use Perplexity Sonar models (sonar-pro as primary)
-      const models = [
-        "sonar-pro",
-        "sonar"
-      ];
+          const userPrompt = `DETAILED PSYCHOMETRIC ASSESSMENT REQUEST
+
+    STUDENT INFORMATION:
+    Name: ${studentData.userName}
+    Email: ${studentData.userEmail || 'Not provided'}
+    Phone: ${studentData.userPhone || 'Not provided'}
+
+    TEST PERFORMANCE BY DIMENSION:
+    ${studentData.topicScoresArray.map(topic => {
+      const frameworkMapping: { [key: string]: { name: string; weight: number; constructs: string[] } } = {
+        // Original survey section names (for backward compatibility)
+        'Academic Readiness': { 
+          name: 'Academic Readiness', 
+          weight: 20, 
+          constructs: ['GPA consistency', 'Standardized test prep', 'English language proficiency', 'Subject mastery'] 
+        },
+        'Cultural Adaptability': { 
+          name: 'Personal & Cultural Readiness', 
+          weight: 15, 
+          constructs: ['Cultural openness', 'Cross-cultural communication', 'Independence', 'Emotional resilience'] 
+        },
+        'Career Clarity': { 
+          name: 'Career & Goal Alignment', 
+          weight: 20, 
+          constructs: ['Career goal clarity', 'Program relevance', 'Decision maturity', 'Long-term planning'] 
+        },
+        'Study Abroad Readiness': { 
+          name: 'Practical Readiness', 
+          weight: 10, 
+          constructs: ['Visa process understanding', 'Document preparation', 'Technology skills', 'Safety awareness'] 
+        },
+        // Actual section names from Ultra Quick Survey questions
+        'Career & Goal Alignment': { 
+          name: 'Career & Goal Alignment', 
+          weight: 20, 
+          constructs: ['Career goal clarity', 'Program relevance', 'Decision maturity', 'Long-term planning'] 
+        },
+        'Personal & Cultural Readiness': { 
+          name: 'Personal & Cultural Readiness', 
+          weight: 15, 
+          constructs: ['Cultural openness', 'Cross-cultural communication', 'Independence', 'Emotional resilience'] 
+        },
+        'Practical Readiness': { 
+          name: 'Practical Readiness', 
+          weight: 10, 
+          constructs: ['Visa process understanding', 'Document preparation', 'Technology skills', 'Safety awareness'] 
+        },
+        'Support System': { 
+          name: 'Support System', 
+          weight: 10, 
+          constructs: ['Family consensus', 'Financial backing', 'Emotional support', 'Backup plans'] 
+        },
+        'Financial Planning': { 
+          name: 'Financial Planning', 
+          weight: 25, 
+          constructs: ['Budgeting skills', 'Funding sources', 'Loan awareness', 'Cost management'] 
+        }
+      };
       
-      let completion: any = null;
-      for (const model of models) {
-        try {
-          console.log(`🔄 Trying model: ${model}`);
-          
-          // Add timeout for each model attempt
-          const modelPromise = openai.chat.completions.create({
-            model: model,
-            messages: [
-              {
-                role: "system",
-                content: systemPrompt
-              },
-              {
-                role: "user", 
-                content: userPrompt
-              }
-            ],
-            temperature: 0.3,
-            max_tokens: 2048
+      const dimension = frameworkMapping[topic.name] || { name: topic.name, weight: 0, constructs: [] };
+      const score = Math.round((topic.correct/topic.total)*100);
+      return `• ${dimension.name} (Weight: ${dimension.weight}%): ${score}%\n  Constructs: ${dimension.constructs.join(', ')}\n  Interpretation: ${score >= 90 ? 'Excellent' : score >= 80 ? 'Very Good' : score >= 70 ? 'Good' : score >= 60 ? 'Satisfactory' : 'Needs Improvement'}`;
+    }).join('\n\n')}
+
+    AGGREGATE PERFORMANCE:
+    Raw Overall Score: ${studentData.overallScore}/100
+    
+    CRITICAL ANALYSIS REQUIREMENTS:
+    
+    1. DIMENSION-BY-DIMENSION BREAKDOWN:
+    For each of the 6 dimensions, provide:
+    - Specific strengths observed (cite the constructs that scored well)
+    - Specific gaps identified (cite the constructs that need improvement)
+    - Realistic risk assessment for that dimension in international education context
+    
+    2. COMPREHENSIVE READINESS INDEX (CRI) CALCULATION:
+    Calculate: CRI = (Financial Planning × 0.25) + (Academic Readiness × 0.20) + (Career Alignment × 0.20) + (Personal & Cultural × 0.15) + (Practical Readiness × 0.10) + (Support System × 0.10)
+    This gives the weighted CRI score (0-100 range).
+    
+    3. READINESS LEVEL & TIMELINE:
+    Based on CRI, determine:
+    - Specific readiness level (Excellent/Very Good/Good/Satisfactory/Needs Improvement/Low)
+    - Recommended preparation timeline
+    - Key milestones to achieve before applying
+    
+    4. COUNTRY-FIT ANALYSIS:
+    For top 3 countries, provide:
+    - Match percentage (0-100%)
+    - Reasoning: Provide 3-5 concise, single-line bullet points (ONE sentence each, max 80-100 chars). Each bullet should cite specific dimensions and scores. Format as simple sentences separated by periods, NOT as a paragraph.
+    - Potential challenges for this student in that country
+    - Specific universities or programs to consider
+    
+    5. ACTIONABLE RECOMMENDATIONS:
+    Provide specific, actionable steps:
+    - Immediate actions (next 1-3 months)
+    - Short-term goals (3-6 months)
+    - Medium-term preparation (6-12 months)
+    - Long-term development (12+ months)
+    
+    OUTPUT FORMAT (JSON only):
+    {
+      "Student Name": "${studentData.userName}",
+      "Student Email": "${studentData.userEmail || ''}",
+      "Student Phone": "${studentData.userPhone || ''}",
+      "Scores": {
+        "Financial Planning": ${studentData.topicScoresArray.find(t => t.name === 'Financial Planning')?.correct || 0},
+        "Academic Readiness": ${studentData.topicScoresArray.find(t => t.name === 'Academic Readiness')?.correct || 0},
+        "Career Alignment": ${studentData.topicScoresArray.find(t => t.name === 'Career & Goal Alignment')?.correct || studentData.topicScoresArray.find(t => t.name === 'Career Alignment')?.correct || 0},
+        "Personal & Cultural": ${studentData.topicScoresArray.find(t => t.name === 'Personal & Cultural Readiness')?.correct || 0},
+        "Practical Readiness": ${studentData.topicScoresArray.find(t => t.name === 'Practical Readiness')?.correct || 0},
+        "Support System": ${studentData.topicScoresArray.find(t => t.name === 'Support System')?.correct || 0}
+      },
+      "Overall Readiness Index": <calculated CRI score>,
+      "Readiness Level": "<determined level>",
+      "Preparation Timeline": "<timeline estimate>",
+      "Strengths": "<detailed paragraph citing specific constructs>",
+      "Gaps": "<detailed paragraph citing specific weaknesses and risks>",
+      "Recommendations": "<3-5 specific, actionable recommendations with timeline>",
+      "Country Fit (Top 3)": [
+        {"country": "<name>", "match": <number 0-100>, "reasoning": "<3-5 concise single-line bullets (ONE sentence each, max 80-100 chars per bullet) explaining why this country fits, citing specific dimensions and scores>", "challenges": "<specific challenges based on weak dimensions>", "universities": "<realistic university names>"},
+        {"country": "<name>", "match": <number 0-100>, "reasoning": "<3-5 concise single-line bullets (ONE sentence each, max 80-100 chars per bullet) explaining why this country fits, citing specific dimensions and scores>", "challenges": "<specific challenges based on weak dimensions>", "universities": "<realistic university names>"},
+        {"country": "<name>", "match": <number 0-100>, "reasoning": "<3-5 concise single-line bullets (ONE sentence each, max 80-100 chars per bullet) explaining why this country fits, citing specific dimensions and scores>", "challenges": "<specific challenges based on weak dimensions>", "universities": "<realistic university names>"}
+      ]
+    }`
+
+        console.log('🌐 Calling Perplexity API...');
+          const openai = new OpenAI({
+            apiKey: apiKey,
+            baseURL: "https://api.perplexity.ai",
+            timeout: 60000, // 60 second timeout
+            maxRetries: 2,
           });
+
+          // Use Perplexity Sonar models (sonar-pro as primary)
+        const models = ["sonar-pro", "sonar"];
           
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Model timeout')), 45000)
-          );
+          let completion: any = null;
+        let lastError: any = null;
+        
+          for (const model of models) {
+            try {
+              console.log(`🔄 Trying model: ${model}`);
+              
+              const modelPromise = openai.chat.completions.create({
+                model: model,
+                messages: [
+                { role: "system", content: systemPrompt },
+                { role: "user", content: userPrompt }
+                ],
+                temperature: 0.3,
+                max_tokens: 2048
+              });
+              
+              const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Model timeout')), 45000)
+              );
+              
+              completion = await Promise.race([modelPromise, timeoutPromise]);
+              console.log(`✅ Success with model: ${model}`);
+              break;
+            } catch (modelError: any) {
+            console.error(`❌ Model ${model} failed:`, modelError.message);
+            lastError = modelError;
+              continue;
+            }
+          }
           
-          completion = await Promise.race([modelPromise, timeoutPromise]);
-          console.log(`✅ Success with model: ${model}`);
-          break;
-        } catch (modelError: any) {
-          console.log(`❌ Model ${model} failed:`, modelError.message);
-          console.log(`❌ Model ${model} error details:`, modelError);
-          continue;
+          if (!completion) {
+          throw new Error(`All models failed. Last error: ${lastError?.message || 'Unknown error'}`);
         }
-      }
-      
-      if (!completion) {
-        throw new Error('All models failed');
-      }
 
-      generatedText = completion.choices[0]?.message?.content || '';
-      modelUsed = 'perplexity-llama-3.1-sonar';
-      console.log('✅ Perplexity API success!');
-      console.log('📝 Generated text length:', generatedText.length);
-      console.log('📝 Generated text preview:', generatedText.substring(0, 200) + '...');
-      
-    } catch (error: any) {
-      console.log('❌ Perplexity API failed, using fallback data');
-      console.log('Error:', error.message);
-      
-            // Generate intelligent fallback data based on student performance using 6-factor framework
-            const readinessBand = studentData.overallScore >= 90 ? 'Excellent' : 
-                                 studentData.overallScore >= 80 ? 'Very Good' :
-                                 studentData.overallScore >= 70 ? 'Good' :
-                                 studentData.overallScore >= 60 ? 'Satisfactory' : 'Needs Improvement';
-            
-            // Generate realistic scores for each framework area based on quiz performance
-            const academicScore = Math.max(0, Math.min(100, studentData.overallScore + Math.floor(Math.random() * 20 - 10)));
-            const financialScore = Math.max(0, Math.min(100, studentData.overallScore + Math.floor(Math.random() * 30 - 15)));
-            const careerScore = Math.max(0, Math.min(100, studentData.overallScore + Math.floor(Math.random() * 25 - 12)));
-            const culturalScore = Math.max(0, Math.min(100, studentData.overallScore + Math.floor(Math.random() * 20 - 10)));
-            const practicalScore = Math.max(0, Math.min(100, studentData.overallScore + Math.floor(Math.random() * 15 - 8)));
-            const supportScore = Math.max(0, Math.min(100, studentData.overallScore + Math.floor(Math.random() * 10 - 5)));
-            
-            // Calculate weighted overall score using 6-factor framework
-            const weightedScore = Math.round(
-              (financialScore * 0.25) + 
-              (academicScore * 0.20) + 
-              (careerScore * 0.20) + 
-              (culturalScore * 0.15) + 
-              (practicalScore * 0.10) + 
-              (supportScore * 0.10)
-            );
-
-            generatedText = JSON.stringify({
-              "Student Name": studentData.userName,
-              "Scores": {
-                "Financial Planning": financialScore,
-                "Academic Readiness": academicScore,
-                "Career Alignment": careerScore,
-                "Personal & Cultural": culturalScore,
-                "Practical Readiness": practicalScore,
-                "Support System": supportScore
-              },
-              "Overall Readiness Index": weightedScore,
-              "Readiness Level": readinessBand,
-              "Strengths": `Based on your assessment, you demonstrate ${readinessBand.toLowerCase()} readiness in key areas. Your performance indicates ${academicScore >= 70 ? 'strong academic foundation' : 'areas for academic improvement'}, ${supportScore >= 70 ? 'good support systems' : 'need for stronger support networks'}, and ${careerScore >= 70 ? 'clear career direction' : 'need for career clarity'}.`,
-              "Gaps": `Areas requiring attention include ${financialScore < 60 ? 'financial planning and budgeting for international education' : 'maintaining financial readiness'}, ${culturalScore < 60 ? 'cultural adaptability and cross-cultural communication skills' : 'enhancing cultural awareness'}, and ${practicalScore < 60 ? 'practical preparation for living abroad' : 'strengthening practical readiness'}.`,
-              "Recommendations": `1. ${financialScore < 70 ? 'Develop a comprehensive financial plan including budgeting, scholarship research, and funding strategies.' : 'Maintain your financial planning approach.'} 2. ${academicScore < 70 ? 'Focus on academic preparation including language skills and subject mastery.' : 'Continue your academic excellence.'} 3. ${careerScore < 70 ? 'Engage in career counseling to clarify long-term goals and align study plans.' : 'Leverage your clear career direction.'} 4. ${culturalScore < 70 ? 'Participate in cultural exchange programs and intercultural training.' : 'Build on your cultural adaptability.'} 5. ${practicalScore < 70 ? 'Research visa processes, accommodation, and daily living requirements.' : 'Enhance your practical readiness.'}`,
-              "Country Fit (Top 3)": weightedScore >= 80 ? ["United States", "United Kingdom", "Canada"] : 
-                                   weightedScore >= 60 ? ["Singapore", "Australia", "Germany"] : 
-                                   ["India (domestic options)", "Singapore (conditional)", "UAE (with support)"]
-            }, null, 2);
-    }
-
-    // Parse the JSON response from Gemini
-    let llmResult: LLMResponse
-    try {
-      // Extract JSON from the response (in case there's extra text)
-      const jsonMatch = generatedText.match(/\{[\s\S]*\}/)
-      if (jsonMatch) {
-        llmResult = JSON.parse(jsonMatch[0])
-      } else {
-        throw new Error('No JSON found in Gemini response')
-      }
-    } catch (parseError) {
-      console.error('Error parsing Gemini response:', parseError)
-      console.error('Raw response:', generatedText)
-      
-      // Fallback to basic structure if parsing fails
-      llmResult = {
-        studentName: studentData.userName,
-        studentEmail: '',
-        studentClass: '',
-        studentSchool: '',
-        score: studentData.overallScore,
-        maxScore: 100,
-        totalTime: 0,
-        topics: studentData.topicScoresArray,
-        careerInterests: [
-          { name: 'Data Science', score: Math.floor(Math.random() * 4) + 6 },
-          { name: 'Engineering', score: Math.floor(Math.random() * 4) + 6 },
-          { name: 'Management', score: Math.floor(Math.random() * 4) + 6 }
-        ],
-        aptitudeScores: [
-          { name: 'Numerical Aptitude', score: Math.floor(Math.random() * 4) + 6 },
-          { name: 'Verbal Reasoning', score: Math.floor(Math.random() * 4) + 6 },
-          { name: 'Problem Solving', score: Math.floor(Math.random() * 4) + 6 }
-        ],
-        skills: [
-          { name: 'Leadership', score: Math.floor(Math.random() * 20) + 70 },
-          { name: 'Communication', score: Math.floor(Math.random() * 20) + 70 },
-          { name: 'Time Management', score: Math.floor(Math.random() * 20) + 70 }
-        ],
-        academicRecommendations: ['Advanced Mathematics', 'Computer Science', 'Business Studies'],
-        examRecommendations: ['SAT', 'ACT', 'IELTS'],
-        upskillingRecommendations: ['Programming', 'Data Analysis', 'Project Management'],
-        extracurricularRecommendations: ['Student Council', 'Tech Club', 'Volunteer Work'],
-        analysis: {
-          readinessBand: studentData.overallScore >= 90 ? 'Excellent' : 
-                        studentData.overallScore >= 80 ? 'Very Good' :
-                        studentData.overallScore >= 70 ? 'Good' :
-                        studentData.overallScore >= 60 ? 'Satisfactory' : 'Weak',
-          overallAssessment: 'AI analysis temporarily unavailable',
-          strengths: ['Strong analytical skills', 'Good problem-solving ability'],
-          weaknesses: ['Needs improvement in communication', 'Time management skills'],
-          specificRecommendations: ['Focus on communication skills', 'Improve time management']
+        const generatedText = completion.choices[0]?.message?.content || '';
+        if (!generatedText) {
+          throw new Error('Empty response from LLM');
         }
+        
+        console.log('✅ LLM API success!');
+          console.log('📝 Generated text length:', generatedText.length);
+          console.log('📝 Generated text preview:', generatedText.substring(0, 200) + '...');
+          
+        // Parse the JSON response from LLM
+        // Extract JSON from the response (in case there's extra text)
+        const jsonMatch = generatedText.match(/\{[\s\S]*\}/)
+        if (!jsonMatch) {
+          throw new Error('No JSON found in LLM response');
+        }
+        
+        const llmResult = JSON.parse(jsonMatch[0]);
+        console.log('✅ Successfully parsed LLM response:', JSON.stringify(llmResult, null, 2));
+        
+        // Validate that essential fields exist
+        if (!llmResult['Student Name'] && !llmResult['studentName']) {
+          throw new Error('LLM response missing required field: Student Name');
+        }
+        if (!llmResult['Scores'] && !llmResult['scores']) {
+          throw new Error('LLM response missing required field: Scores');
+        }
+        if (!llmResult['Overall Readiness Index']) {
+          throw new Error('LLM response missing required field: Overall Readiness Index');
+        }
+        if (!llmResult['Readiness Level']) {
+          throw new Error('LLM response missing required field: Readiness Level');
+        }
+        if (!llmResult['Strengths']) {
+          throw new Error('LLM response missing required field: Strengths');
+        }
+        if (!llmResult['Gaps']) {
+          throw new Error('LLM response missing required field: Gaps');
+        }
+        if (!llmResult['Recommendations']) {
+          throw new Error('LLM response missing required field: Recommendations');
+        }
+
+        console.log('📤 Returning LLM result:', JSON.stringify(llmResult, null, 2))
+        return NextResponse.json(llmResult)
+        
+      } catch (error: any) {
+        console.error('❌ Error in analyze-results API:', error)
+        console.error('❌ Error message:', error.message)
+        console.error('❌ Error stack:', error.stack)
+        return NextResponse.json({ 
+          error: 'Failed to analyze results',
+          details: error.message,
+          stack: error.stack
+        }, { status: 500 })
       }
     }
-
-    return NextResponse.json(llmResult)
-    
-  } catch (error: any) {
-    console.error('❌ Error in analyze-results API:', error)
-    console.error('❌ Error message:', error.message)
-    console.error('❌ Error stack:', error.stack)
-    return NextResponse.json({ 
-      error: 'Failed to analyze results',
-      details: error.message,
-      stack: error.stack
-    }, { status: 500 })
-  }
-}
