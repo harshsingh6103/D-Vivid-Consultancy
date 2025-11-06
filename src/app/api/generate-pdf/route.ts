@@ -984,6 +984,231 @@ function generateHTMLContent(results: any): string {
             @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
             @import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap');
 
+            /* Final Page Styles */
+            .final-page {
+                page-break-before: always;
+                background: #ffffff;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .connect-banner {
+                position: relative;
+                height: 200px;
+                background: linear-gradient(135deg, #003B8C, #5BE8B9);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+                border-radius: 12px 12px 0 0;
+            }
+
+            .banner-content {
+                position: relative;
+                z-index: 2;
+                text-align: center;
+                color: white;
+            }
+
+            .banner-content h1 {
+                font-family: 'Poppins', sans-serif;
+                font-size: 36px;
+                font-weight: 800;
+                margin: 0;
+                letter-spacing: 0.5px;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .banner-content p {
+                font-size: 18px;
+                margin: 8px 0 0;
+                opacity: 0.9;
+            }
+
+            .banner-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="none" stroke="white" stroke-width="0.5" stroke-dasharray="5,5"/></svg>');
+                background-size: 30px 30px;
+                opacity: 0.1;
+            }
+
+            .contact-container {
+                padding: 40px;
+                background: white;
+                border-radius: 0 0 12px 12px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            }
+
+            .contact-grid {
+                display: flex;
+                gap: 40px;
+                margin-bottom: 40px;
+            }
+
+            .contact-details {
+                flex: 1.5;
+                display: flex;
+                flex-direction: column;
+                gap: 24px;
+            }
+
+            .contact-item {
+                display: flex;
+                align-items: flex-start;
+                gap: 16px;
+                padding: 16px;
+                background: #f8fafc;
+                border-radius: 8px;
+                border: 1px solid #e2e8f0;
+            }
+
+            .contact-icon {
+                width: 40px;
+                height: 40px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                color: white;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            
+            .contact-icon .icon {
+                width: 24px;
+                height: 24px;
+                color: white;
+                fill: currentColor;
+            }
+
+            .contact-text h3 {
+                font-family: 'Poppins', sans-serif;
+                font-size: 16px;
+                font-weight: 600;
+                color: #1e293b;
+                margin: 0 0 4px;
+            }
+
+            .contact-text p {
+                font-size: 14px;
+                color: #475569;
+                margin: 0;
+                line-height: 1.6;
+            }
+
+            .social-section {
+                flex: 1;
+                padding: 24px;
+                background: #f8fafc;
+                border-radius: 8px;
+                border: 1px solid #e2e8f0;
+            }
+
+            .social-section h3 {
+                font-family: 'Poppins', sans-serif;
+                font-size: 16px;
+                font-weight: 600;
+                color: #1e293b;
+                margin: 0 0 20px;
+                text-align: center;
+            }
+
+            .social-links {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .social-link {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 10px;
+                background: white;
+                border-radius: 8px;
+                text-decoration: none;
+                color: #1e293b;
+                border: 1px solid #e2e8f0;
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+
+            .social-link:hover {
+                transform: translateY(-1px);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            }
+
+            .social-link span {
+                font-size: 14px;
+                font-weight: 500;
+            }
+
+            .social-icon {
+                width: 32px;
+                height: 32px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                color: white;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .social-icon .icon {
+                width: 20px;
+                height: 20px;
+                color: white;
+                fill: currentColor;
+            }
+
+            .linkedin-icon {
+                background: #0077B5;
+            }
+
+            .instagram-icon {
+                background: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
+            }
+
+            .facebook-icon {
+                background: #1877F2;
+            }
+
+            .youtube-icon {
+                background: #FF0000;
+            }
+
+            .website-cta {
+                text-align: center;
+            }
+
+            .website-button {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: linear-gradient(135deg, #003B8C, #5BE8B9);
+                color: white;
+                text-decoration: none;
+                padding: 16px 32px;
+                border-radius: 8px;
+                font-family: 'Poppins', sans-serif;
+                font-weight: 600;
+                font-size: 16px;
+                letter-spacing: 0.5px;
+                box-shadow: 0 4px 6px rgba(0, 59, 140, 0.2);
+            }
+
+            .arrow {
+                font-size: 20px;
+                margin-left: 4px;
+            }
+
             * {
                 margin: 0;
                 padding: 0;
@@ -2942,6 +3167,107 @@ read_file
                     <span>D-Vivid Consultant - Your Gateway to Global Education</span>
                 </div>
                 <div>Report Generated: ${currentDate}</div>
+            </div>
+            
+            <!-- Final Contact Page -->
+            <div class="final-page">
+                <!-- Banner Section -->
+                <div class="connect-banner">
+                    <div class="banner-content">
+                        <h1>Let's Connect</h1>
+                        <p>Begin Your Global Education Journey With Us</p>
+                    </div>
+                    <div class="banner-overlay"></div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="contact-container">
+                    <div class="contact-grid">
+                        <!-- Contact Details -->
+                        <div class="contact-details">
+                            <div class="contact-item">
+                                <div class="contact-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="icon">
+                                        <path fill="currentColor" d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.908.339 1.85.574 2.81.7A2 2 0 0122 16.92z"/>
+                                    </svg>
+                                </div>
+                                <div class="contact-text">
+                                    <h3>Phone</h3>
+                                    <p>+91 75750 20920</p>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <div class="contact-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="icon">
+                                        <path fill="currentColor" d="M4 4h16a2 2 0 012 2v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm8 7l8-5H4l8 5zm-8 7h16V8.37l-8 4.99-8-4.99V18z"/>
+                                    </svg>
+                                </div>
+                                <div class="contact-text">
+                                    <h3>Email</h3>
+                                    <p>info@dvividconsultant.com</p>
+                                </div>
+                            </div>
+                            <div class="contact-item">
+                                <div class="contact-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="icon">
+                                        <path fill="currentColor" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/>
+                                    </svg>
+                                </div>
+                                <div class="contact-text">
+                                    <h3>Location</h3>
+                                    <p>B-3, 2nd Floor, Safal Profitaire,<br>Corporate Rd, Prahlad Nagar,<br>Ahmedabad, Gujarat 380015</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Social Links -->
+                        <div class="social-section">
+                            <h3>Follow Us for Insights and Updates</h3>
+                            <div class="social-links">
+                                <a href="https://www.linkedin.com/company/dvividconsultant/" class="social-link">
+                                    <div class="social-icon linkedin-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="icon">
+                                            <path fill="currentColor" d="M19 3a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h14m-.5 15.5v-5.3a3.26 3.26 0 00-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 011.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 001.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 00-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z"/>
+                                        </svg>
+                                    </div>
+                                    <span>LinkedIn</span>
+                                </a>
+                                <a href="https://www.instagram.com/dvividconsultant/" class="social-link">
+                                    <div class="social-icon instagram-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="icon">
+                                            <path fill="currentColor" d="M7.8 2h8.4C19.4 2 22 4.6 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8C4.6 22 2 19.4 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2m-.2 2A3.6 3.6 0 0 0 4 7.6v8.8C4 18.39 5.61 20 7.6 20h8.8a3.6 3.6 0 0 0 3.6-3.6V7.6C20 5.61 18.39 4 16.4 4H7.6m9.65 1.5a1.25 1.25 0 0 1 1.25 1.25A1.25 1.25 0 0 1 17.25 8 1.25 1.25 0 0 1 16 6.75a1.25 1.25 0 0 1 1.25-1.25M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3z"/>
+                                        </svg>
+                                    </div>
+                                    <span>Instagram</span>
+                                </a>
+                                <a href="https://www.facebook.com/dvividconsultant" class="social-link">
+                                    <div class="social-icon facebook-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="icon">
+                                            <path fill="currentColor" d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96A10 10 0 0 0 22 12.06C22 6.53 17.5 2.04 12 2.04Z"/>
+                                        </svg>
+                                    </div>
+                                    <span>Facebook</span>
+                                </a>
+                                <a href="https://www.youtube.com/@abroadgnangurudvivid" class="social-link">
+                                    <div class="social-icon youtube-icon">
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" class="icon">
+                                            <path fill="currentColor" d="M10 15l5.19-3L10 9v6m11.56-7.83c.13.47.22 1.1.28 1.9.07.8.1 1.49.1 2.09L22 12c0 2.19-.16 3.8-.44 4.83-.25.9-.83 1.48-1.73 1.73-.47.13-1.33.22-2.65.28-1.3.07-2.49.1-3.59.1L12 19c-4.19 0-6.8-.16-7.83-.44-.9-.25-1.48-.83-1.73-1.73-.13-.47-.22-1.1-.28-1.9-.07-.8-.1-1.49-.1-2.09L2 12c0-2.19.16-3.8.44-4.83.25-.9.83-1.48 1.73-1.73.47-.13 1.33-.22 2.65-.28 1.3-.07 2.49-.1 3.59-.1L12 5c4.19 0 6.8.16 7.83.44.9.25 1.48.83 1.73 1.73z"/>
+                                        </svg>
+                                    </div>
+                                    <span>YouTube</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Website Button -->
+                    <div class="website-cta">
+                        <a href="https://www.dvividconsultant.com/" class="website-button">
+                            Visit Our Website
+                            <span class="arrow">→</span>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
         ` : ''}
