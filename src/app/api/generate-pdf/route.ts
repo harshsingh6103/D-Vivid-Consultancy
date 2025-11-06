@@ -1037,11 +1037,101 @@ function generateHTMLContent(results: any): string {
                 opacity: 0.1;
             }
 
+            .contact-banner {
+                text-align: center;
+                padding: 64px 40px;
+                background: linear-gradient(135deg, #003B8C 0%, #5BE8B9 100%);
+                position: relative;
+                overflow: hidden;
+                color: white;
+                border-radius: 12px 12px 0 0;
+            }
+
+            .contact-banner::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.4));
+                z-index: 1;
+            }
+
+            .contact-banner > * {
+                position: relative;
+                z-index: 2;
+            }
+
+            .contact-banner h1 {
+                font-size: 3rem;
+                font-weight: 700;
+                margin: 32px 0 16px;
+                color: white;
+                text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }
+
+            .contact-banner .contact-subtitle {
+                font-size: 1.5rem;
+                color: rgba(255,255,255,0.9);
+                margin-bottom: 0;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            }
+
+            .dvivid-logo {
+                width: 220px;
+                height: 220px;
+                margin: 0 auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255,255,255,0.95);
+                border-radius: 50%;
+                padding: 24px;
+                box-shadow: 
+                    0 0 0 8px rgba(255,255,255,0.2),
+                    0 8px 24px rgba(0,0,0,0.2);
+                transition: transform 0.3s ease;
+            }
+
+            .dvivid-logo img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+            }
+
             .contact-container {
                 padding: 40px;
                 background: white;
                 border-radius: 0 0 12px 12px;
                 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            }
+
+            .dvivid-logo {
+                width: 180px;
+                height: 180px;
+                margin: 0 auto 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: white;
+                border-radius: 50%;
+                padding: 20px;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            }
+
+            .dvivid-logo img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
+            }
+
+            .contact-subtitle {
+                font-size: 1.2rem;
+                color: #64748b;
+                margin: 16px 0 32px;
+                text-align: center;
             }
 
             .contact-grid {
@@ -3171,13 +3261,13 @@ read_file
             
             <!-- Final Contact Page -->
             <div class="final-page">
-                <!-- Banner Section -->
-                <div class="connect-banner">
-                    <div class="banner-content">
-                        <h1>Let's Connect</h1>
-                        <p>Begin Your Global Education Journey With Us</p>
+                <!-- Banner Section with Logo -->
+                <div class="contact-banner">
+                    <div class="dvivid-logo">
+                        <img src="${logoDataURI}" alt="D-Vivid Consultant" />
                     </div>
-                    <div class="banner-overlay"></div>
+                    <h1>Let's Connect</h1>
+                    <p class="contact-subtitle">Begin Your Global Education Journey With Us</p>
                 </div>
 
                 <!-- Contact Information -->
